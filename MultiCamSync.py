@@ -602,7 +602,6 @@ class MultiCamSync(Gtk.Application):
 							self.thumbs[mov["path"]] = ""
 						## draw thumbnail
 						if self.thumbs[mov["path"]] != "":
-							print("display: ", mov["path"], self.cw - 50, y + 1)
 							Gdk.cairo_set_source_pixbuf(cairo_ctx, self.thumbs[mov["path"]], self.cw - w, y + 1)
 							cairo_ctx.paint()
 			y += step_y
