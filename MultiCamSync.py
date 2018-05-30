@@ -24,11 +24,10 @@ from io import StringIO
 from VideoImport import *
 from VideoExport import *
 
-class MyApplication(Gtk.Application):
+class MultiCamSync(Gtk.Application):
 
 	def __init__(self):
 		Gtk.Application.__init__(self)
-
 		self.vi = VideoImport()
 		self.ve = VideoExport(self.vi)
 		self.cw = 1600
@@ -38,48 +37,43 @@ class MyApplication(Gtk.Application):
 		self.streams = {}
 		self.thumbs = {}
 		self.project = self.vi.new()
+		self.filename = ""
 
 	def do_activate(self):
 		self.window = Gtk.ApplicationWindow(application=self)
 		self.window.connect("destroy", Gtk.main_quit)
-
-
 		titlebar = self.create_titlebar()
 		self.window.set_titlebar(titlebar)
-
 		mainbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.window.add(mainbox)
-
 		videobox = self.create_videobox()
 		mainbox.pack_start(videobox, False, False, 0)
-
 		infobox = self.create_infobox()
 		mainbox.pack_start(infobox, False, False, 10)
-
 		timeline = self.create_timeline()
 		mainbox.pack_start(timeline, True, True, 0)
-
 		sliders = self.create_sliders()
 		mainbox.pack_start(sliders, False, False, 0)
-
 		button_startstop = Gtk.Button.new_with_label("Start/Stop")
 		button_startstop.connect("clicked", self.start_stop)
 		mainbox.pack_start(button_startstop, False, False, 0)
-
 		self.window.show_all()
 		self.video_loop()
-
-		## quik import for testing
-#		self.project = self.vi.load(self.vi.new(), "/home/dippel/dreh_beatnotes")
-#		self.ajustment_pos.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
-#		self.ajustment_offset.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
-#		self.treview_update()
-
-		self.file_load_projectfile("beatnotes.multicamsync")
+		if len(sys.argv) > 1:
+			if sys.argv[1].endswith(".multicamsync"):
+				if os.path.isfile(sys.argv[1]):
+					self.file_load_projectfile(sys.argv[1])
+				else:
+					print("argument is not a file: " + sys.argv[1])
+			elif os.path.isdir(sys.argv[1]):
+				self.project = self.vi.load(self.vi.new(), sys.argv[1])
+				self.filename = ""
+				self.ajustment_pos.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
+				self.ajustment_offset.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
+				self.treview_update()
 
 	def start_stop(self, button):
 		self.stat = 1 - self.stat
-
 
 	def import_folder(self, action, parameter):
 		dialog = Gtk.FileChooserDialog("Please choose a folder", self.window, Gtk.FileChooserAction.SELECT_FOLDER, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, "Select", Gtk.ResponseType.OK))
@@ -87,6 +81,7 @@ class MyApplication(Gtk.Application):
 		if response == Gtk.ResponseType.OK:
 			print("Folder selected: " + dialog.get_filename())
 			self.project = self.vi.load(self.vi.new(), dialog.get_filename())
+			self.filename = ""
 			self.ajustment_pos.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
 			self.ajustment_offset.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
 			self.treview_update()
@@ -94,9 +89,9 @@ class MyApplication(Gtk.Application):
 			print("Cancel clicked")
 		dialog.destroy()
 
-
 	def poject_new(self, action, parameter):
 		self.project = self.vi.new()
+		self.filename = ""
 		self.ajustment_pos.configure(0, 0, 10000, 1, 25, 0)
 		self.ajustment_offset.configure(0, 0, 10000, 1, 25, 0)
 		self.video_l.set_from_file("empty.png")
@@ -104,6 +99,19 @@ class MyApplication(Gtk.Application):
 		self.treview_update()
 
 	def file_save_project(self, action, parameter):
+		if self.filename == "":
+			file_save_project_as(action, parameter)
+		else:
+			print("MultiCamSync project save to " + self.filename)
+			self.project["pos"] = self.slider_pos.get_value()
+			self.project["scale"] = self.slider_scale.get_value()
+			self.project["offset"] = self.slider_offset.get_value()
+			jsondata = json.dumps(self.project)
+			file = open(self.filename, "w") 
+			file.write(jsondata) 
+			file.close() 
+
+	def file_save_project_as(self, action, parameter):
 		dialog = Gtk.FileChooserDialog("Please choose a file", self.window, Gtk.FileChooserAction.SAVE, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
 		filter_xmeml = Gtk.FileFilter()
 		filter_xmeml.set_name("MultiCamSync project")
@@ -132,9 +140,9 @@ class MyApplication(Gtk.Application):
 		self.project = json.load(file)
 		file.close()
 		self.project = self.vi.load(self.project, self.project["folder"])
+		self.filename = path
 		self.ajustment_pos.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
 		self.ajustment_offset.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
-
 		self.slider_pos.set_value(self.project["pos"])
 		self.slider_scale.set_value(self.project["scale"])
 		self.slider_offset.set_value(self.project["offset"])
@@ -416,6 +424,7 @@ class MyApplication(Gtk.Application):
 	def timeline_draw_event(self, da, cairo_ctx):
 		if len(self.project["tracks"]) == 0:
 			return
+		self.thumbs = {}
 		self.cw = self.timeline.get_allocation().width
 		self.ch = self.timeline.get_allocation().height
 		scale_x = self.slider_scale.get_value() / 200.0
@@ -496,7 +505,7 @@ class MyApplication(Gtk.Application):
 					## load thumbnail
 					if not mov["path"] in self.thumbs:
 						if os.path.isfile(os.path.splitext(mov["path"])[0] + ".THM"):
-							w = step_y - 2 * 1.777
+							w = (step_y - 2) * 1.777
 							if w > (end - begin) * scale_x:
 								w = (end - begin) * scale_x
 							pixbuf = Pixbuf.new_from_file(os.path.splitext(mov["path"])[0] + ".THM")
@@ -560,7 +569,45 @@ class MyApplication(Gtk.Application):
 		cairo_ctx.rel_line_to(0, self.ch)
 		cairo_ctx.close_path()
 		cairo_ctx.stroke()
-		## frame
+		## draw track thumbnails
+		w = (step_y - 2) * 1.777
+		cairo_ctx.rectangle(self.cw - w, 0, self.cw, self.ch)
+		lg1 = cairo.LinearGradient(0, 0, w, 0)
+		lg1.add_color_stop_rgb(0, 0.1, 0.1, 0.1)
+		lg1.add_color_stop_rgb(1, 0.7, 0.7, 0.7)
+		cairo_ctx.set_source(lg1)
+		cairo_ctx.fill()
+		cairo_ctx.set_source_rgb(0.0, 0.0, 0.0)
+		cairo_ctx.new_path()
+		cairo_ctx.move_to(self.cw - w, 0)
+		cairo_ctx.rel_line_to(0, self.ch)
+		cairo_ctx.close_path()
+		cairo_ctx.stroke()
+		y = 20
+		n = 0
+		for cid in self.project["tracks"]:
+			cam = self.project["tracks"][cid]
+			for fid in self.project["files"]:
+				mov = self.project["files"][fid]
+				if mov["trackid"] == cam["id"]:
+					begin = mov["frm_begin"] + self.project["tracks"][mov["trackid"]]["frm_trim"] + mov["frm_trim"]
+					end = mov["frm_end"] + self.project["tracks"][mov["trackid"]]["frm_trim"] + mov["frm_trim"]
+					if pos >= begin and pos <= end:
+						cairo_ctx.set_source_rgb(0.5, 0.5, 0.9)
+						lg1.add_color_stop_rgb(0, 0.5, 0.5, 0.9)
+						if os.path.isfile(os.path.splitext(mov["path"])[0] + ".THM"):
+							pixbuf = Pixbuf.new_from_file(os.path.splitext(mov["path"])[0] + ".THM")
+							self.thumbs[mov["path"]] = pixbuf.scale_simple(w, step_y - 2, InterpType.BILINEAR)
+						else:
+							self.thumbs[mov["path"]] = ""
+						## draw thumbnail
+						if self.thumbs[mov["path"]] != "":
+							print("display: ", mov["path"], self.cw - 50, y + 1)
+							Gdk.cairo_set_source_pixbuf(cairo_ctx, self.thumbs[mov["path"]], self.cw - w, y + 1)
+							cairo_ctx.paint()
+			y += step_y
+			n += 1
+		## timeline-border
 		cairo_ctx.set_source_rgb(0.5, 0.5, 0.5)
 		cairo_ctx.rectangle(0, 0, self.cw, self.ch)
 		cairo_ctx.stroke()
@@ -722,6 +769,7 @@ class MyApplication(Gtk.Application):
 		menumodel.append("New", "app.new")
 		menumodel.append("Open", "app.load")
 		menumodel.append("Save", "app.save")
+		menumodel.append("Save as", "app.save_as")
 		menumodel.append("Import", "app.import")
 		submenu = Gio.Menu()
 		submenu.append("Xmeml", "app.export_xmeml")
@@ -759,6 +807,10 @@ class MyApplication(Gtk.Application):
 		file_save_project = Gio.SimpleAction.new("save", None)
 		file_save_project.connect("activate", self.file_save_project)
 		self.add_action(file_save_project)
+
+		file_save_project_as = Gio.SimpleAction.new("save_as", None)
+		file_save_project_as.connect("activate", self.file_save_project_as)
+		self.add_action(file_save_project_as)
 
 		file_load_project = Gio.SimpleAction.new("load", None)
 		file_load_project.connect("activate", self.file_load_project)
@@ -838,10 +890,7 @@ class MyApplication(Gtk.Application):
 
 
 
-
-
-app = MyApplication()
-
+app = MultiCamSync()
 
 exit_status = app.run()
 sys.exit(exit_status)
