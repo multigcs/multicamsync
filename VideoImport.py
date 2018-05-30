@@ -144,21 +144,21 @@ class VideoImport:
 			if var == "Media Create Date":
 				dt = line.split(":", 1)[1].strip()
 				if "." in dt:
-					cstamp = datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timestamp()
+					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
 				else:
-					cstamp = datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timestamp()
+					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
 			elif var == "Create Date":
 				dt = line.split(":", 1)[1].strip()
 				if "." in dt:
-					cstamp = datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timestamp()
+					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
 				else:
-					cstamp = datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timestamp()
+					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
 			elif var == "Date/Time Original":
 				dt = line.split(":", 1)[1].split("+", 1)[0].strip()
 				if "." in dt:
-					cstamp = datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timestamp()
+					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
 				else:
-					cstamp = datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timestamp()
+					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
 			elif var == "Canon Model ID":
 				camname = line.split(":", 1)[1].strip()
 			elif var == "Canon Model Name":
