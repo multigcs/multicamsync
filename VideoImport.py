@@ -22,28 +22,12 @@ from io import StringIO
 
 class VideoImport:
 	def __init__(self):
-		self.CSTAMP = 0
-		self.FSTAMP = 1
-		self.CSTAMP_MINUS_LEN = 2
-		self.FSTAMP_MINUS_LEN = 3
 		self.project = {}
 		self.project["fps"] = 25
-		self.cam_calc = {}
-		self.cam_calc["EOS M"] = self.CSTAMP
-		self.cam_calc["Canon EOS M"] = self.CSTAMP
-		self.cam_calc["M6"] = self.CSTAMP
-		self.cam_calc["Canon EOS M6"] = self.CSTAMP
-		self.cam_calc["EOS M3"] = self.CSTAMP_MINUS_LEN
-		self.cam_calc["Canon EOS M3"] = self.CSTAMP_MINUS_LEN
-		self.cam_calc["EOS 6D"] = self.CSTAMP
-		self.cam_calc["Canon EOS 6D"] = self.CSTAMP
-		self.cam_calc["Canon EOS 5D Mark II"] = self.CSTAMP
-		self.cam_calc["HG310"] = self.CSTAMP
-		self.cam_calc["Panasonic"] = self.CSTAMP
-		self.cam_calc["SESSION"] = self.FSTAMP
+		file = open("cameras.json", "r") 
+		self.cam_calc = json.load(file)
+		file.close()
 		self.disable_cam = []
-		self.cam_frm_correct = {"lumix": 2152325, "SESSION": 1386, "M6": 977, "5d-s1": -37, "6D": 57487}
-		self.mov_frm_correct = {"MVI_0284.MP4": 4, "MVI_0566.MOV": 15, "MVI_0568.MOV": 15, "MVI_0268.MP4": 4, "00009.MTS": 76, "00011.MTS": 40}
 
 	def new (self):
 		self.project = {}
@@ -83,8 +67,6 @@ class VideoImport:
 			self.ctrim = 0
 			if self.trackname in self.project["tracks"]:
 				self.ctrim = self.project["tracks"][self.trackname]["frm_trim"]
-			elif self.trackname in self.cam_frm_correct:
-				self.ctrim = self.cam_frm_correct[self.trackname]
 			flag = 0
 			for root, directories, filenames in os.walk(camfolder):
 				for filename in sorted(filenames): 
@@ -125,8 +107,6 @@ class VideoImport:
 		return self.project
 
 	def add_mov (self, cam, filename):
-		if cam in self.disable_cam:
-			return 0
 		## get metadata
 		if not os.path.isfile(filename + ".info"):
 			cap = cv2.VideoCapture(filename)
@@ -195,13 +175,13 @@ class VideoImport:
 				lens = line.split(":", 1)[1].strip()
 		## fix timestamps
 		if camname in self.cam_calc:
-			if self.cam_calc[camname] == self.CSTAMP:
+			if self.cam_calc[camname] == "CSTAMP":
 				stamp = cstamp
-			elif self.cam_calc[camname] == self.FSTAMP:
+			elif self.cam_calc[camname] == "FSTAMP":
 				stamp = fstamp
-			elif self.cam_calc[camname] == self.CSTAMP_MINUS_LEN:
+			elif self.cam_calc[camname] == "CSTAMP_MINUS_LEN":
 				stamp = cstamp - (length / mov_fps)
-			elif self.cam_calc[camname] == self.FSTAMP_MINUS_LEN:
+			elif self.cam_calc[camname] == "FSTAMP_MINUS_LEN":
 				stamp = fstamp - (length / mov_fps)
 			else:
 				print ("UNKNOWN")
@@ -218,8 +198,6 @@ class VideoImport:
 				frm_trim = 0
 				if filename in self.project["files"]:
 					frm_trim = self.project["files"][filename]["frm_trim"]
-				elif os.path.basename(filename) in self.mov_frm_correct:
-					frm_trim = self.mov_frm_correct[os.path.basename(filename)]
 				mov = {"track": cam, "path": filename, "name": os.path.splitext(os.path.basename(filename))[0], "id": self.fid, "trackid": self.trackname, "frm_length": length * self.project["fps"] / mov_fps, "length": length, "fps": mov_fps, "camname": camname, "lens": lens, "frm_start": frm_start, "stamp": stamp, "cstamp": cstamp, "fstamp": fstamp, "stampdiff": (fstamp - cstamp), "duration": (length / mov_fps), "test": (fstamp - stamp), "frm_trim": frm_trim}
 				self.project["files"][filename] = mov
 				self.fid += 1
