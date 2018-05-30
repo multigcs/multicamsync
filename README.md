@@ -36,14 +36,38 @@ Multi-Camera Syncing-Tool
 
 ## Edit
 * each main folder becomes a track
-* initial offsets are read from file-timestamps, there are some corrections for different camera types
-	* ["Canon EOS M"] = self.CSTAMP # using create date from meta-info
-	* ["Canon EOS M3"] = self.CSTAMP_MINUS_LEN # using create date from meta-info minus media-length
-	* ["SESSION"] = self.FSTAMP # using filestamp (last modify)
-	* .....
+* initial offsets are read from file-timestamps
 * You can set the offset of a complete track and of each single file
+* there are some corrections for different camera types in cameras.json
+```json
+	{
+		"EOS M": "CSTAMP",
+		"Canon EOS M": "CSTAMP",
+		"M6": "CSTAMP",
+		"Canon EOS M6": "CSTAMP",
+		"EOS M3": "CSTAMP_MINUS_LEN",
+		"Canon EOS M3": "CSTAMP_MINUS_LEN",
+		"EOS 6D": "CSTAMP",
+		"Canon EOS 6D": "CSTAMP",
+		"Canon EOS 5D Mark II": "CSTAMP",
+		"HG310": "CSTAMP",
+		"Panasonic": "CSTAMP",
+		"SESSION": "FSTAMP"
+	}
+```
 
 ## Export
-* XMEML and Kdenlive Export
+* XMEML-Project (tested with Lightworks)
+* Kdenlive-Project (tested with Kdenlive)
+
+## Depends
+* python3-opencv
+* python3-pil
+* python3-pil.imagetk
+* python3-gi
+* python3-gi-cairo
+* python3-numpy
+* ffmpeg (for Thumbnail-Images)
+* exiftool (for Exif-Infos)
 
 
