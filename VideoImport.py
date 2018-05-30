@@ -24,7 +24,7 @@ class VideoImport:
 	def __init__(self):
 		self.project = {}
 		self.project["fps"] = 25
-		file = open("cameras.json", "r") 
+		file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "cameras.json"), "r") 
 		self.cam_calc = json.load(file)
 		file.close()
 		self.disable_cam = []

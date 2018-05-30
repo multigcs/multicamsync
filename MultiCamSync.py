@@ -24,8 +24,9 @@ from io import StringIO
 from VideoImport import *
 from VideoExport import *
 
-class MultiCamSync(Gtk.Application):
 
+
+class MultiCamSync(Gtk.Application):
 	def __init__(self):
 		Gtk.Application.__init__(self)
 		self.vi = VideoImport()
@@ -94,8 +95,8 @@ class MultiCamSync(Gtk.Application):
 		self.filename = ""
 		self.ajustment_pos.configure(0, 0, 10000, 1, 25, 0)
 		self.ajustment_offset.configure(0, 0, 10000, 1, 25, 0)
-		self.video_l.set_from_file("empty.png")
-		self.video_r.set_from_file("empty.png")
+		self.video_l.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
+		self.video_r.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 		self.treview_update()
 
 	def file_save_project(self, action, parameter):
@@ -347,9 +348,9 @@ class MultiCamSync(Gtk.Application):
 				else:
 					ok1, frame1 = self.streams[mov1["path"]].read()
 				if begin1 < 0:
-					self.video_l.set_from_file("empty.png")
+					self.video_l.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 				elif begin1 > mov1["frm_length"]:
-					self.video_l.set_from_file("empty.png")
+					self.video_l.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 				elif ok1:
 					frame_l = cv2.resize(frame1, (480,270))
 					iml = cv2.cvtColor(frame_l, cv2.COLOR_BGR2RGB)
@@ -358,7 +359,7 @@ class MultiCamSync(Gtk.Application):
 					self.video_l.set_from_pixbuf(pbl.copy())
 					self.video_l.show()
 				else:
-					self.video_l.set_from_file("empty.png")
+					self.video_l.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 		if self.project["path2"] != "":
 			mov2 = self.get_mov_by_path(self.project["path2"])
 			begin2 = pos - mov2["frm_begin"] - self.project["tracks"][mov2["trackid"]]["frm_trim"] - mov2["frm_trim"]
@@ -370,9 +371,9 @@ class MultiCamSync(Gtk.Application):
 				else:
 					ok2, frame2 = self.streams[mov2["path"]].read()
 				if begin2 < 0:
-					self.video_r.set_from_file("empty.png")
+					self.video_r.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 				elif begin2 > mov2["frm_length"]:
-					self.video_r.set_from_file("empty.png")
+					self.video_r.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 				elif ok2:
 					frame_r = cv2.resize(frame2, (480,270))
 					imr = cv2.cvtColor(frame_r, cv2.COLOR_BGR2RGB)
@@ -381,7 +382,7 @@ class MultiCamSync(Gtk.Application):
 					self.video_r.set_from_pixbuf(pbr.copy())
 					self.video_r.show()
 				else:
-					self.video_r.set_from_file("empty.png")
+					self.video_r.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 
 
 	def on_update_diff(self, event):
@@ -831,7 +832,7 @@ class MultiCamSync(Gtk.Application):
 		## Video Image
 		video_lbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.video_l = Gtk.Image()
-		self.video_l.set_from_file("empty.png")
+		self.video_l.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 		self.video_l.show()
 		video_lbox.pack_start(self.video_l, False, False, 0)
 		self.meta_l = Gtk.Label("----")
@@ -840,7 +841,7 @@ class MultiCamSync(Gtk.Application):
 		## Video Image
 		video_rbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 		self.video_r = Gtk.Image()
-		self.video_r.set_from_file("empty.png")
+		self.video_r.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 		self.video_r.show()
 		video_rbox.pack_start(self.video_r, False, False, 0)
 		self.meta_r = Gtk.Label("----")
@@ -885,7 +886,6 @@ class MultiCamSync(Gtk.Application):
 
 	def quit_callback(self, action, parameter):
 		self.quit()
-
 
 
 
