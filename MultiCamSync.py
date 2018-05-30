@@ -12,14 +12,11 @@ import time
 import argparse
 import json
 import cv2
-import PIL
-from PIL import Image, ImageTk
 import gi
 gi.require_version('Gtk', '3.0') 
 from gi.repository import Gtk, GdkPixbuf, Gdk, Pango, Gio, GObject
 from gi.repository.GdkPixbuf import Pixbuf, InterpType
 import cairo
-import numpy as np
 from io import StringIO
 from VideoImport import *
 from VideoExport import *
@@ -277,17 +274,6 @@ class MultiCamSync(Gtk.Application):
 		value = self.tree.item(item,"text")
 		self.set_video2_path(value)
 
-
-
-	def video_display(self, panel, frame):
-		frame = cv2.resize(frame, (480,270))
-		cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
-		image = Image.fromarray(cv2image)
-		imgtk = ImageTk.PhotoImage(image=image)
-		imgtk.imgtk = imgtk
-		panel.configure(image=imgtk)
-
- 
 	def video_loop_reset(self):
 		self.update = 0
 

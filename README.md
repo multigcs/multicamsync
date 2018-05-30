@@ -62,11 +62,8 @@ Multi-Camera Syncing-Tool
 
 ## Depends
 * python3-opencv
-* python3-pil
-* python3-pil.imagetk
 * python3-gi
 * python3-gi-cairo
-* python3-numpy
 * ffmpeg (for Thumbnail-Images)
 * exiftool (for Exif-Infos)
 
