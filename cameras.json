@@ -1,0 +1,14 @@
+{
+	"EOS M": "CSTAMP",
+	"Canon EOS M": "CSTAMP",
+	"M6": "CSTAMP",
+	"Canon EOS M6": "CSTAMP",
+	"EOS M3": "CSTAMP_MINUS_LEN",
+	"Canon EOS M3": "CSTAMP_MINUS_LEN",
+	"EOS 6D": "CSTAMP",
+	"Canon EOS 6D": "CSTAMP",
+	"Canon EOS 5D Mark II": "CSTAMP",
+	"HG310": "CSTAMP",
+	"Panasonic": "CSTAMP",
+	"SESSION": "FSTAMP"
+}
