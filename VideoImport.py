@@ -131,6 +131,12 @@ class VideoImport:
 		file = open(filename + ".metadata", "r") 
 		camname = cam
 		lens = "???"
+		width = 1920
+		height = 1080
+		ahz = 48000
+		size = 9999999
+		mimetype = ""
+		filetype = ""
 		fstamp = os.stat(filename).st_mtime
 		cstamp = 0
 		for line in file.read().split("\n"):
@@ -141,7 +147,19 @@ class VideoImport:
 				continue
 			if val == "":
 				continue
-			if var == "Media Create Date":
+			elif var == "Image Width":
+				width = int(line.split(":", 1)[1].strip())
+			elif var == "Image Height":
+				height = int(line.split(":", 1)[1].strip())
+			elif var == "MIME Type":
+				mimetype = line.split(":", 1)[1].strip()
+			elif var == "File Type":
+				filetype = line.split(":", 1)[1].strip()
+			elif var == "File Size":
+				size = line.split(":", 1)[1].strip()
+			elif var == "Audio Sample Rate":
+				ahz = int(line.split(":", 1)[1].strip())
+			elif var == "Media Create Date":
 				dt = line.split(":", 1)[1].strip()
 				if "." in dt:
 					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
@@ -198,7 +216,7 @@ class VideoImport:
 				frm_trim = 0
 				if filename in self.project["files"]:
 					frm_trim = self.project["files"][filename]["frm_trim"]
-				mov = {"track": cam, "path": filename, "name": os.path.splitext(os.path.basename(filename))[0], "id": self.fid, "trackid": self.trackname, "frm_length": length * self.project["fps"] / mov_fps, "length": length, "fps": mov_fps, "camname": camname, "lens": lens, "frm_start": frm_start, "stamp": stamp, "cstamp": cstamp, "fstamp": fstamp, "stampdiff": (fstamp - cstamp), "duration": (length / mov_fps), "test": (fstamp - stamp), "frm_trim": frm_trim}
+				mov = {"track": cam, "path": filename, "name": os.path.splitext(os.path.basename(filename))[0], "id": self.fid, "trackid": self.trackname, "frm_length": length * self.project["fps"] / mov_fps, "length": length, "fps": mov_fps, "camname": camname, "lens": lens, "frm_start": frm_start, "stamp": stamp, "cstamp": cstamp, "fstamp": fstamp, "stampdiff": (fstamp - cstamp), "duration": (length / mov_fps), "test": (fstamp - stamp), "frm_trim": frm_trim, "width": width, "height": height, "ahz": ahz, "size": size, "mimetype": mimetype, "filetype": filetype}
 				self.project["files"][filename] = mov
 				self.fid += 1
 				flag = 1

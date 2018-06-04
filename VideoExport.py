@@ -24,6 +24,281 @@ class VideoExport:
 	def __init__(self, vi):
 		self.vi = vi
 
+
+	def osp_point(self, x, y, interpolation):
+		Point = {}
+		Point["co"] = {}
+		Point["co"]["X"] = x
+		Point["co"]["Y"] = y
+		Point["interpolation"] = interpolation
+		return Point
+
+	def osp_point2(self, x, y, interpolation, handle_type, left_x, left_y, right_x, right_y):
+		Point = {}
+		Point["co"] = {}
+		Point["co"]["X"] = x
+		Point["co"]["Y"] = y
+		Point["interpolation"] = interpolation
+		return Point
+
+
+	def openshot(self, path, project):
+		osp = {}
+		osp["id"] = "T0"
+		osp["fps"] = {}
+		osp["fps"]["num"] = str(project["fps"])
+		osp["fps"]["den"] = 1
+		osp["width"] = 1920
+		osp["height"] = 1080
+		osp["sample_rate"] = 44100
+		osp["channels"] = 2
+		osp["channel_layout"] = 3
+		osp["settings"] = {}
+
+		osp["clips"] = []
+		layer_n = 0
+		for cid in project["tracks"]:
+			cam = project["tracks"][cid]
+			for fid in project["files"]:
+				mov = project["files"][fid]
+				if mov["trackid"] == cam["id"]:
+					length = mov["duration"] * project["fps"]
+					frm_begin = (mov["frm_begin"]) + project["tracks"][mov["trackid"]]["frm_trim"] + mov["frm_trim"]
+					frm_end = frm_begin + length
+					osp_clip = {}
+					osp_clip["alpha"] = {}
+					osp_clip["alpha"]["Points"] = []
+					osp_clip["alpha"]["Points"].append(self.osp_point(1, 1, 2))
+					osp_clip["anchor"] = 0
+					osp_clip["channel_filter"] = {}
+					osp_clip["channel_filter"]["Points"] = []
+					osp_clip["channel_filter"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["channel_mapping"] = {}
+					osp_clip["channel_mapping"]["Points"] = []
+					osp_clip["channel_mapping"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["crop_height"] = {}
+					osp_clip["crop_height"]["Points"] = []
+					osp_clip["crop_height"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["crop_wigth"] = {}
+					osp_clip["crop_wigth"]["Points"] = []
+					osp_clip["crop_wigth"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["crop_x"] = {}
+					osp_clip["crop_x"]["Points"] = []
+					osp_clip["crop_x"]["Points"].append(self.osp_point(1, 0, 2))
+					osp_clip["crop_y"] = {}
+					osp_clip["crop_y"]["Points"] = []
+					osp_clip["crop_y"]["Points"].append(self.osp_point(1, 0, 2))
+					osp_clip["display"] = 0
+					osp_clip["duration"] = (mov["frm_length"] / mov["fps"])
+					osp_clip["effects"] = []
+					osp_clip["end"] = (mov["frm_length"] / mov["fps"])
+					osp_clip["gravity"] = 4
+					osp_clip["has_audio"] = {}
+					osp_clip["has_audio"]["Points"] = []
+					osp_clip["has_audio"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["has_video"] = {}
+					osp_clip["has_video"]["Points"] = []
+					osp_clip["has_video"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["id"] = str(mov["id"])
+					osp_clip["layer"] = layer_n
+					osp_clip["location_x"] = {}
+					osp_clip["location_x"]["Points"] = []
+					osp_clip["location_x"]["Points"].append(self.osp_point(1, 0, 2))
+					osp_clip["location_y"] = {}
+					osp_clip["location_y"]["Points"] = []
+					osp_clip["location_y"]["Points"].append(self.osp_point(1, 0, 2))
+					osp_clip["perspective_c1_x"] = {}
+					osp_clip["perspective_c1_x"]["Points"] = []
+					osp_clip["perspective_c1_x"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["perspective_c1_y"] = {}
+					osp_clip["perspective_c1_y"]["Points"] = []
+					osp_clip["perspective_c1_y"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["perspective_c2_x"] = {}
+					osp_clip["perspective_c2_x"]["Points"] = []
+					osp_clip["perspective_c2_x"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["perspective_c2_y"] = {}
+					osp_clip["perspective_c2_y"]["Points"] = []
+					osp_clip["perspective_c2_y"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["perspective_c3_x"] = {}
+					osp_clip["perspective_c3_x"]["Points"] = []
+					osp_clip["perspective_c3_x"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["perspective_c3_y"] = {}
+					osp_clip["perspective_c3_y"]["Points"] = []
+					osp_clip["perspective_c3_y"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["perspective_c4_x"] = {}
+					osp_clip["perspective_c4_x"]["Points"] = []
+					osp_clip["perspective_c4_x"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["perspective_c4_y"] = {}
+					osp_clip["perspective_c4_y"]["Points"] = []
+					osp_clip["perspective_c4_y"]["Points"].append(self.osp_point(1, -1, 2))
+					osp_clip["position"] = frm_begin / project["fps"]
+					osp_clip["reader"] = {}
+					osp_clip["reader"]["acodec"] = "pcm_s16le"
+					osp_clip["reader"]["audio_bit_rate"] = 1536000
+					osp_clip["reader"]["audio_stream_index"] = 1
+					osp_clip["reader"]["audio_timebase"] = {}
+					osp_clip["reader"]["audio_timebase"]["den"] = mov["ahz"]
+					osp_clip["reader"]["audio_timebase"]["num"] = 1
+					osp_clip["reader"]["channel_layout"] = 3
+					osp_clip["reader"]["channels"] = 2
+					osp_clip["reader"]["display_ratio"] = {}
+					osp_clip["reader"]["display_ratio"]["den"] = 9
+					osp_clip["reader"]["display_ratio"]["num"] = 16
+					osp_clip["reader"]["duration"] = mov["frm_length"] / mov["fps"]
+					osp_clip["reader"]["file_size"] =  mov["size"]
+					osp_clip["reader"]["fps"] = {}
+					osp_clip["reader"]["fps"]["den"] = 1
+					osp_clip["reader"]["fps"]["num"] = mov["fps"]
+					osp_clip["reader"]["has_audio"] = True
+					osp_clip["reader"]["has_single_image"] = False
+					osp_clip["reader"]["has_video"] = True
+					osp_clip["reader"]["height"] = mov["height"]
+					osp_clip["reader"]["interlaced_frame"] = False
+					osp_clip["reader"]["path"] = mov["path"]
+					osp_clip["reader"]["pixel_format"] = 12
+					osp_clip["reader"]["pixel_ratio"] = {}
+					osp_clip["reader"]["pixel_ratio"]["den"] = 1
+					osp_clip["reader"]["pixel_ratio"]["num"] = 1
+					osp_clip["reader"]["sample_rate"] = mov["ahz"]
+					osp_clip["reader"]["top_field_first"] = True
+					osp_clip["reader"]["type"] = "FFmpegReader"
+					osp_clip["reader"]["vcodec"] = "h264"
+					osp_clip["reader"]["video_bit_rate"] = 46166220
+					osp_clip["reader"]["video_length"] = mov["duration"]
+					osp_clip["reader"]["video_stream_index"] = 0
+					osp_clip["reader"]["video_timebase"] = {}
+					osp_clip["reader"]["video_timebase"]["den"] = (mov["fps"] * 1000)
+					osp_clip["reader"]["video_timebase"]["num"] = 1
+					osp_clip["reader"]["width"] = mov["width"]
+					osp_clip["rotation"] = {}
+					osp_clip["rotation"]["Points"] = []
+					osp_clip["rotation"]["Points"].append(self.osp_point(1, 0, 2))
+					osp_clip["scale"] = 1
+					osp_clip["scale_x"] = {}
+					osp_clip["scale_x"]["Points"] = []
+					osp_clip["scale_x"]["Points"].append(self.osp_point(1, 1, 2))
+					osp_clip["scale_y"] = {}
+					osp_clip["scale_y"]["Points"] = []
+					osp_clip["scale_y"]["Points"].append(self.osp_point(1, 1, 2))
+					osp_clip["shear_x"] = {}
+					osp_clip["shear_x"]["Points"] = []
+					osp_clip["shear_x"]["Points"].append(self.osp_point(1, 1, 2))
+					osp_clip["shear_y"] = {}
+					osp_clip["shear_y"]["Points"] = []
+					osp_clip["shear_y"]["Points"].append(self.osp_point(1, 1, 2))
+					osp_clip["start"] = 0
+					osp_clip["time"] = {}
+					osp_clip["time"]["Points"] = []
+					osp_clip["time"]["Points"].append(self.osp_point(1, 1, 2))
+					osp_clip["volume"] = {}
+					osp_clip["volume"]["Points"] = []
+					osp_clip["volume"]["Points"].append(self.osp_point(1, 1, 2))
+
+					osp_clip["wave_color"] = {}
+					osp_clip["wave_color"]["alpha"] = {}
+					osp_clip["wave_color"]["alpha"]["Points"] = []
+					osp_clip["wave_color"]["alpha"]["Points"].append(self.osp_point2(1, 255, 0, 0, 0.5, 1, 0.5, 0))
+					osp_clip["wave_color"]["blue"] = {}
+					osp_clip["wave_color"]["blue"]["Points"] = []
+					osp_clip["wave_color"]["blue"]["Points"].append(self.osp_point2(1, 255, 0, 0, 0.5, 1, 0.5, 0))
+					osp_clip["wave_color"]["green"] = {}
+					osp_clip["wave_color"]["green"]["Points"] = []
+					osp_clip["wave_color"]["green"]["Points"].append(self.osp_point2(1, 123, 0, 0, 0.5, 1, 0.5, 0))
+					osp_clip["wave_color"]["red"] = {}
+					osp_clip["wave_color"]["red"]["Points"] = []
+					osp_clip["wave_color"]["red"]["Points"].append(self.osp_point2(1, 0, 0, 0, 0.5, 1, 0.5, 0))
+
+					osp_clip["waveform"] = False
+					osp_clip["file_id"] = str(mov["id"])
+					osp_clip["title"] = str(mov["name"])
+					if os.path.isfile(os.path.splitext(mov["path"])[0] + ".THM"):
+						osp_clip["image"] = os.path.splitext(mov["path"])[0] + ".THM"
+					else:
+						osp_clip["image"] = "../home/dippel/.openshot_qt/thumbnail/" + str(mov["id"]) + ".png"
+					osp["clips"].append(osp_clip)
+			layer_n += 1
+
+		osp["effects"] = []
+		osp["export_path"] = ""
+
+		osp["files"] = []
+		for fid in project["files"]:
+			mov = project["files"][fid]
+			osp_file = {}
+			osp_file["acodec"] = "pcm_s16le"
+			osp_file["audio_bit_rate"] = 1536000
+			osp_file["audio_stream_index"] = 1
+			osp_file["audio_timebase"] = {}
+			osp_file["audio_timebase"]["den"] = 48000
+			osp_file["audio_timebase"]["num"] = 1
+			osp_file["channel_layout"] = 3
+			osp_file["channels"] = 2
+			osp_file["display_ratio"] = {}
+			osp_file["display_ratio"]["den"] = 9
+			osp_file["display_ratio"]["num"] = 16
+			osp_file["duration"] = (mov["frm_length"] / mov["fps"])
+			osp_file["file_size"] = "2131263557"
+			osp_file["fps"] = {}
+			osp_file["fps"]["den"] = 1
+			osp_file["fps"]["num"] = mov["fps"]
+			osp_file["has_audio"] = True
+			osp_file["has_single_image"] = False
+			osp_file["has_video"] = True
+			osp_file["height"] = 1080
+			osp_file["interlaced_frame"] = False
+			osp_file["path"] = mov["path"]
+			osp_file["pixel_format"] = 12
+			osp_file["pixel_ratio"] = {}
+			osp_file["pixel_ratio"]["den"] = 1
+			osp_file["pixel_ratio"]["num"] = 1
+			osp_file["sample_rate"] = 48000
+			osp_file["top_field_first"] = True
+			osp_file["type"] = "FFmpegReader"
+			osp_file["vcodec"] = "h264"
+			osp_file["video_bit_rate"] = 46166220
+			osp_file["video_length"] = "9233"
+			osp_file["video_stream_index"] = 0
+			osp_file["video_timebase"] = {}
+			osp_file["video_timebase"]["den"] = 25000
+			osp_file["video_timebase"]["num"] = 1
+			osp_file["width"] = 1920
+			osp_file["media_type"] = "video"
+			osp_file["id"] = str(mov["id"])
+			osp["files"].append(osp_file)
+
+		osp["duration"] = 99999
+		osp["scale"] = 56
+		osp["tick_pixels"] = 100
+		osp["playhead_position"] = 0
+		osp["profile"] = "HDV 1080 25p"
+
+		osp["layers"] = []
+		layer_n = 0
+		for cid in project["tracks"]:
+			cam = project["tracks"][cid]
+			osp_layer = {}
+			osp_layer["number"] = layer_n
+			osp_layer["y"] = 0
+			osp_layer["label"] = str(cam["name"])
+			osp_layer["lock"] = False
+			osp_layer["id"] = str(cam["name"])
+			osp["layers"].append(osp_layer)
+			layer_n += 1
+
+		osp["markers"] = []
+		osp["progress"] = []
+		osp["history"] = {}
+		osp["version"] = {}
+		osp["version"]["openshot-qt"] = "2.4.1"
+		osp["version"]["libopenshot"] = "0.1.9"
+
+		jsondata = json.dumps(osp, indent=4, separators=(',', ': '))
+		file = open(path, "w") 
+		file.write(jsondata) 
+		file.close() 
+
+
+
 	def kdenlive(self, path, project):
 		output = open(path, "w")
 		if output:

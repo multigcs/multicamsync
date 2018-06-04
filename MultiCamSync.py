@@ -70,6 +70,24 @@ class MultiCamSync(Gtk.Application):
 				self.ajustment_offset.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
 				self.treview_update()
 
+			if len(sys.argv) > 2:
+				if sys.argv[2].endswith(".osp"):
+					print("export to " + sys.argv[2] + " as Openshot-Project")
+					self.ve.openshot(sys.argv[2], self.project)
+					sys.exit(0)
+				elif sys.argv[2].endswith(".kdenlive"):
+					print("export to " + sys.argv[2] + " as Kdenlive-Project")
+					self.ve.kdenlive(sys.argv[2], self.project)
+					sys.exit(0)
+				elif sys.argv[2].endswith(".xmeml") or sys.argv[2].endswith(".xml"):
+					print("export to " + sys.argv[2] + " as Xmeml-Project")
+					self.ve.xmeml(sys.argv[2], self.project)
+					sys.exit(0)
+				else:
+					print("argument is not a known fileformat: " + sys.argv[2])
+					sys.exit(0)
+
+
 	def start_stop(self, button):
 		self.stat = 1 - self.stat
 
@@ -104,7 +122,7 @@ class MultiCamSync(Gtk.Application):
 			self.project["pos"] = self.slider_pos.get_value()
 			self.project["scale"] = self.slider_scale.get_value()
 			self.project["offset"] = self.slider_offset.get_value()
-			jsondata = json.dumps(self.project)
+			jsondata = json.dumps(self.project, indent=4, separators=(',', ': '))
 			file = open(self.filename, "w") 
 			file.write(jsondata) 
 			file.close() 
@@ -125,7 +143,7 @@ class MultiCamSync(Gtk.Application):
 			self.project["pos"] = self.slider_pos.get_value()
 			self.project["scale"] = self.slider_scale.get_value()
 			self.project["offset"] = self.slider_offset.get_value()
-			jsondata = json.dumps(self.project)
+			jsondata = json.dumps(self.project, indent=4, separators=(',', ': '))
 			file = open(dialog.get_filename(), "w") 
 			file.write(jsondata) 
 			file.close() 
@@ -178,6 +196,24 @@ class MultiCamSync(Gtk.Application):
 		if response == Gtk.ResponseType.OK:
 			print("Xmeml project export to " + dialog.get_filename())
 			self.ve.xmeml(dialog.get_filename(), self.project)
+		elif response == Gtk.ResponseType.CANCEL:
+			print("Cancel clicked")
+		dialog.destroy()
+
+	def file_save_openshot(self, action, parameter):
+		dialog = Gtk.FileChooserDialog("Please choose a file", self.window, Gtk.FileChooserAction.SAVE, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+		filter_openshot = Gtk.FileFilter()
+		filter_openshot.set_name("openshot project")
+		filter_openshot.add_pattern("*.osp")
+		dialog.add_filter(filter_openshot)
+		filter_any = Gtk.FileFilter()
+		filter_any.set_name("Any files")
+		filter_any.add_pattern("*")
+		dialog.add_filter(filter_any)
+		response = dialog.run()
+		if response == Gtk.ResponseType.OK:
+			print("openshot project export to " + dialog.get_filename())
+			self.ve.openshot(dialog.get_filename(), self.project)
 		elif response == Gtk.ResponseType.CANCEL:
 			print("Cancel clicked")
 		dialog.destroy()
@@ -760,6 +796,7 @@ class MultiCamSync(Gtk.Application):
 		submenu = Gio.Menu()
 		submenu.append("Xmeml", "app.export_xmeml")
 		submenu.append("Kdenlive", "app.export_kdenlive")
+		submenu.append("Openshot", "app.export_openshot")
 		submenu.append("CSV", "app.export_csv")
 		menumodel.append_submenu("Export", submenu)
 		menumodel.append("Quit", "app.quit")
@@ -777,6 +814,10 @@ class MultiCamSync(Gtk.Application):
 		file_save_xmeml = Gio.SimpleAction.new("export_xmeml", None)
 		file_save_xmeml.connect("activate", self.file_save_xmeml)
 		self.add_action(file_save_xmeml)
+
+		export_openshot = Gio.SimpleAction.new("export_openshot", None)
+		export_openshot.connect("activate", self.file_save_openshot)
+		self.add_action(export_openshot)
 
 		export_kdenlive = Gio.SimpleAction.new("export_kdenlive", None)
 		export_kdenlive.connect("activate", self.file_save_kdenlive)
