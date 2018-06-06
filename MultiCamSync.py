@@ -26,6 +26,7 @@ from VideoExport import *
 class MultiCamSync(Gtk.Application):
 	def __init__(self):
 		Gtk.Application.__init__(self)
+		self.video_init_cv()
 		self.vi = VideoImport()
 		self.ve = VideoExport(self.vi)
 		self.cw = 1600
@@ -69,6 +70,8 @@ class MultiCamSync(Gtk.Application):
 				self.ajustment_pos.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
 				self.ajustment_offset.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
 				self.treview_update()
+				self.video_pos_cv()
+				self.video_update_cv()
 
 			if len(sys.argv) > 2:
 				if sys.argv[2].endswith(".osp"):
@@ -101,6 +104,8 @@ class MultiCamSync(Gtk.Application):
 			self.ajustment_pos.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
 			self.ajustment_offset.configure(0, 0, (self.project["frm_last"] - self.project["frm_first"]), 1, 25, 0)
 			self.treview_update()
+			self.video_pos_cv()
+			self.video_update_cv()
 		elif response == Gtk.ResponseType.CANCEL:
 			print("Cancel clicked")
 		dialog.destroy()
@@ -113,6 +118,8 @@ class MultiCamSync(Gtk.Application):
 		self.video_l.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 		self.video_r.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 		self.treview_update()
+		self.video_pos_cv()
+		self.video_update_cv()
 
 	def file_save_project(self, action, parameter):
 		if self.filename == "":
@@ -163,6 +170,8 @@ class MultiCamSync(Gtk.Application):
 		self.slider_scale.set_value(self.project["scale"])
 		self.slider_offset.set_value(self.project["offset"])
 		self.treview_update()
+		self.video_pos_cv()
+		self.video_update_cv()
 
 	def file_load_project(self, action, parameter):
 		dialog = Gtk.FileChooserDialog("Please choose a file", self.window, Gtk.FileChooserAction.OPEN, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
@@ -282,8 +291,8 @@ class MultiCamSync(Gtk.Application):
 			pos = (begin + (mov["frm_length"] / 2))
 			self.slider_pos.set_value(pos)
 		## redraw
-		self.video_pos()
-		self.video_update()
+		self.video_pos_cv()
+		self.video_update_cv()
 
 	def set_video2_path(self, path):
 		mov = self.get_mov_by_path(path)
@@ -297,8 +306,8 @@ class MultiCamSync(Gtk.Application):
 		self.slider_diff.set_value(-mov["frm_trim"])
 		self.slider_difft.set_value(self.project["tracks"][mov["trackid"]]["frm_trim"])
 		## redraw
-		self.video_pos()
-		self.video_update()
+		self.video_pos_cv()
+		self.video_update_cv()
 
 	def set_list_l(self, event):
 		item = self.tree.selection()[0]
@@ -318,8 +327,8 @@ class MultiCamSync(Gtk.Application):
 			if self.stat == 1:
 				self.slider_pos.set_value(self.slider_pos.get_value() + 1)
 			if self.stat != 1:
-				self.video_pos()
-			self.video_update()
+				self.video_pos_cv()
+			self.video_update_cv()
 			self.timeline.queue_draw()
 			GObject.timeout_add(5, self.video_loop_reset)
 
@@ -329,7 +338,12 @@ class MultiCamSync(Gtk.Application):
 			GObject.timeout_add(10, self.video_loop)
 
 
-	def video_pos(self):
+	def video_init_cv(self):
+		#print("video_init")
+		return
+
+
+	def video_pos_cv(self):
 		#print("video_pos")
 		pos = self.slider_pos.get_value()
 		if self.project["path1"] != "":
@@ -356,7 +370,7 @@ class MultiCamSync(Gtk.Application):
 					self.streams[mov2["path"]].set(1, 0);
 
 
-	def video_update(self):
+	def video_update_cv(self):
 		#print("video_update")
 		pos = self.slider_pos.get_value()
 		if self.project["path1"] != "":
@@ -846,6 +860,11 @@ class MultiCamSync(Gtk.Application):
 		return hb
 
 
+	def video_widget_cv(self):
+		video_w = Gtk.Image()
+		video_w.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
+		return video_w
+
 
 	def create_videobox(self):
 		videobox = Gtk.Box()
@@ -858,8 +877,7 @@ class MultiCamSync(Gtk.Application):
 		videobox.pack_start(scroll, False, False, 0)
 		## Video Image
 		video_lbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		self.video_l = Gtk.Image()
-		self.video_l.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
+		self.video_l = self.video_widget_cv()
 		self.video_l.show()
 		video_lbox.pack_start(self.video_l, False, False, 0)
 		self.meta_l = Gtk.Label("----")
@@ -867,8 +885,7 @@ class MultiCamSync(Gtk.Application):
 		videobox.pack_start(video_lbox, True, True, 0)
 		## Video Image
 		video_rbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-		self.video_r = Gtk.Image()
-		self.video_r.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
+		self.video_r = self.video_widget_cv()
 		self.video_r.show()
 		video_rbox.pack_start(self.video_r, False, False, 0)
 		self.meta_r = Gtk.Label("----")
