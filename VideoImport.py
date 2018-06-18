@@ -10,9 +10,8 @@ import datetime
 import time
 import argparse
 import json
+import re
 import cv2
-import PIL
-from PIL import Image, ImageTk
 import gi
 gi.require_version('Gtk', '3.0') 
 from gi.repository import Gtk, GdkPixbuf, Gdk, Pango, Gio, GObject
@@ -119,21 +118,69 @@ class VideoImport:
 			print(os.popen("exiftool " + filename + " > " + filename + ".metadata 2>&1").read().strip())
 		if not os.path.isfile(os.path.splitext(filename)[0] + ".THM"):
 			print(os.path.splitext(filename)[0] + ".THM")
-			print(os.popen("ffmpeg -i " + filename + " -vf  \"thumbnail,scale=640:360\" -frames:v 1 " + filename + ".jpg 2>&1").read().strip())
+			print(os.popen("ffmpeg -i " + filename + " -vf  \"thumbnail,scale=640:360\" -frames:v 1 " + filename + ".jpg > " + filename + ".ffinfo 2>&1").read().strip())
 			os.rename(filename + ".jpg", os.path.splitext(filename)[0] + ".THM")
+		if not os.path.isfile(filename + ".ffinfo"):
+			print(os.popen("ffmpeg -i " + filename + " > " + filename + ".ffinfo 2>&1").read().strip())
 		## read metadata
+		file = open(filename + ".info", "r") 
 		length = 0
 		mov_fps = 0
-		file = open(filename + ".info", "r") 
 		for line in file.read().split("\n"):
 			length = int(line.split(";")[0])
 			mov_fps = float(line.split(";")[1])
+		file = open(filename + ".ffinfo", "r") 
+		input_flag = 0
+		vcodec = ""
+		vsize = ""
+		vbrate = ""
+		vfrate = ""
+		acodec = ""
+		ams = ""
+		afmt = ""
+		abrate = ""
+		parts = ""
+		pixfmt = ""
+		ahz = 48000
+		width = 1920
+		height = 1080
+		for line in file.read().split("\n"):
+			if line.startswith("Input #0,"):
+				input_flag = 1
+			elif line.startswith("Input"):
+				input_flag = 0
+				break
+			elif line.startswith("Output"):
+				input_flag = 0
+				break
+			elif input_flag == 1:
+				if ":" in line:
+					var = line.split(":", 1)[0].strip()
+					val = line.split(":", 1)[1].strip()
+				else:
+					continue
+				if "Stream #" in line and ": Video: " in line and "b/s" in line:
+					line = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", line)
+					parts = line.split(",")
+					vcodec = parts[0].split(":")[3].strip().split(" ")[0]
+					vsize = parts[2].strip().split(" ")[0]
+					width = vsize.split("x")[0]
+					height = vsize.split("x")[1]
+					vbrate = parts[3].strip().split(" ")[0] * 1000
+					vfrate = parts[4].strip().split(" ")[0]
+					pixfmt = parts[1].strip().split("(")[0]
+				elif "Stream #" in line and ": Audio: " in line and "b/s" in line:
+					line = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", line)
+					parts = line.split(",")
+					acodec = parts[0].split(":")[3].strip().split(" ")[0]
+					ahz = parts[1].strip().split(" ")[0]
+					ams = parts[2].strip()
+					afmt = parts[3].strip()
+					abrate = parts[4].strip().split(" ")[0] * 1000
+
 		file = open(filename + ".metadata", "r") 
 		camname = cam
 		lens = "???"
-		width = 1920
-		height = 1080
-		ahz = 48000
 		size = 9999999
 		mimetype = ""
 		filetype = ""
@@ -216,7 +263,7 @@ class VideoImport:
 				frm_trim = 0
 				if filename in self.project["files"]:
 					frm_trim = self.project["files"][filename]["frm_trim"]
-				mov = {"track": cam, "path": filename, "name": os.path.splitext(os.path.basename(filename))[0], "id": self.fid, "trackid": self.trackname, "frm_length": length * self.project["fps"] / mov_fps, "length": length, "fps": mov_fps, "camname": camname, "lens": lens, "frm_start": frm_start, "stamp": stamp, "cstamp": cstamp, "fstamp": fstamp, "stampdiff": (fstamp - cstamp), "duration": (length / mov_fps), "test": (fstamp - stamp), "frm_trim": frm_trim, "width": width, "height": height, "ahz": ahz, "size": size, "mimetype": mimetype, "filetype": filetype}
+				mov = {"track": cam, "path": filename, "name": os.path.splitext(os.path.basename(filename))[0], "id": self.fid, "trackid": self.trackname, "frm_length": length * self.project["fps"] / mov_fps, "length": length, "fps": mov_fps, "camname": camname, "lens": lens, "frm_start": frm_start, "stamp": stamp, "cstamp": cstamp, "fstamp": fstamp, "stampdiff": (fstamp - cstamp), "duration": (length / mov_fps), "test": (fstamp - stamp), "frm_trim": frm_trim, "width": width, "height": height, "ahz": ahz, "size": size, "mimetype": mimetype, "filetype": filetype, "vcodec": vcodec, "vsize": vsize, "vbrate": vbrate, "vfrate": vfrate, "acodec": acodec, "ams": ams, "afmt": afmt, "abrate": abrate, "pixfmt": pixfmt}
 				self.project["files"][filename] = mov
 				self.fid += 1
 				flag = 1

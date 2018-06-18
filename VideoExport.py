@@ -133,8 +133,8 @@ class VideoExport:
 					osp_clip["perspective_c4_y"]["Points"].append(self.osp_point(1, -1, 2))
 					osp_clip["position"] = frm_begin / project["fps"]
 					osp_clip["reader"] = {}
-					osp_clip["reader"]["acodec"] = "pcm_s16le"
-					osp_clip["reader"]["audio_bit_rate"] = 1536000
+					osp_clip["reader"]["acodec"] = mov["acodec"]
+					osp_clip["reader"]["audio_bit_rate"] = mov["abrate"]
 					osp_clip["reader"]["audio_stream_index"] = 1
 					osp_clip["reader"]["audio_timebase"] = {}
 					osp_clip["reader"]["audio_timebase"]["den"] = mov["ahz"]
@@ -162,8 +162,8 @@ class VideoExport:
 					osp_clip["reader"]["sample_rate"] = mov["ahz"]
 					osp_clip["reader"]["top_field_first"] = True
 					osp_clip["reader"]["type"] = "FFmpegReader"
-					osp_clip["reader"]["vcodec"] = "h264"
-					osp_clip["reader"]["video_bit_rate"] = 46166220
+					osp_clip["reader"]["vcodec"] = mov["vcodec"]
+					osp_clip["reader"]["video_bit_rate"] = mov["vbrate"]
 					osp_clip["reader"]["video_length"] = mov["duration"]
 					osp_clip["reader"]["video_stream_index"] = 0
 					osp_clip["reader"]["video_timebase"] = {}
@@ -193,7 +193,6 @@ class VideoExport:
 					osp_clip["volume"] = {}
 					osp_clip["volume"]["Points"] = []
 					osp_clip["volume"]["Points"].append(self.osp_point(1, 1, 2))
-
 					osp_clip["wave_color"] = {}
 					osp_clip["wave_color"]["alpha"] = {}
 					osp_clip["wave_color"]["alpha"]["Points"] = []
@@ -207,7 +206,6 @@ class VideoExport:
 					osp_clip["wave_color"]["red"] = {}
 					osp_clip["wave_color"]["red"]["Points"] = []
 					osp_clip["wave_color"]["red"]["Points"].append(self.osp_point2(1, 0, 0, 0, 0.5, 1, 0.5, 0))
-
 					osp_clip["waveform"] = False
 					osp_clip["file_id"] = str(mov["id"])
 					osp_clip["title"] = str(mov["name"])
@@ -225,11 +223,11 @@ class VideoExport:
 		for fid in project["files"]:
 			mov = project["files"][fid]
 			osp_file = {}
-			osp_file["acodec"] = "pcm_s16le"
-			osp_file["audio_bit_rate"] = 1536000
+			osp_file["acodec"] = mov["acodec"]
+			osp_file["audio_bit_rate"] = mov["abrate"]
 			osp_file["audio_stream_index"] = 1
 			osp_file["audio_timebase"] = {}
-			osp_file["audio_timebase"]["den"] = 48000
+			osp_file["audio_timebase"]["den"] = mov["ahz"]
 			osp_file["audio_timebase"]["num"] = 1
 			osp_file["channel_layout"] = 3
 			osp_file["channels"] = 2
@@ -237,31 +235,31 @@ class VideoExport:
 			osp_file["display_ratio"]["den"] = 9
 			osp_file["display_ratio"]["num"] = 16
 			osp_file["duration"] = (mov["frm_length"] / mov["fps"])
-			osp_file["file_size"] = "2131263557"
+			osp_file["file_size"] = mov["size"]
 			osp_file["fps"] = {}
 			osp_file["fps"]["den"] = 1
 			osp_file["fps"]["num"] = mov["fps"]
 			osp_file["has_audio"] = True
 			osp_file["has_single_image"] = False
 			osp_file["has_video"] = True
-			osp_file["height"] = 1080
+			osp_file["height"] = mov["height"]
 			osp_file["interlaced_frame"] = False
 			osp_file["path"] = mov["path"]
 			osp_file["pixel_format"] = 12
 			osp_file["pixel_ratio"] = {}
 			osp_file["pixel_ratio"]["den"] = 1
 			osp_file["pixel_ratio"]["num"] = 1
-			osp_file["sample_rate"] = 48000
+			osp_file["sample_rate"] = mov["ahz"]
 			osp_file["top_field_first"] = True
 			osp_file["type"] = "FFmpegReader"
-			osp_file["vcodec"] = "h264"
-			osp_file["video_bit_rate"] = 46166220
-			osp_file["video_length"] = "9233"
+			osp_file["vcodec"] = mov["vcodec"]
+			osp_file["video_bit_rate"] = mov["vbrate"]
+			osp_file["video_length"] = mov["duration"]
 			osp_file["video_stream_index"] = 0
 			osp_file["video_timebase"] = {}
-			osp_file["video_timebase"]["den"] = 25000
+			osp_file["video_timebase"]["den"] = (mov["fps"] * 1000)
 			osp_file["video_timebase"]["num"] = 1
-			osp_file["width"] = 1920
+			osp_file["width"] = mov["width"]
 			osp_file["media_type"] = "video"
 			osp_file["id"] = str(mov["id"])
 			osp["files"].append(osp_file)
@@ -386,17 +384,17 @@ class VideoExport:
 				output.write("  <property name=\"meta.media.0.stream.type\">video</property>\n")
 				output.write("  <property name=\"meta.media.0.stream.frame_rate\">" + str(mov["fps"]) + "</property>\n")
 				output.write("  <property name=\"meta.media.0.stream.sample_aspect_ratio\">0</property>\n")
-				output.write("  <property name=\"meta.media.0.codec.width\">1920</property>\n")
-				output.write("  <property name=\"meta.media.0.codec.height\">1080</property>\n")
+				output.write("  <property name=\"meta.media.0.codec.width\">" + str(mov["width"]) + "</property>\n")
+				output.write("  <property name=\"meta.media.0.codec.height\">" + str(mov["height"]) + "</property>\n")
 				output.write("  <property name=\"meta.media.0.codec.rotate\">0</property>\n")
 				output.write("  <property name=\"meta.media.0.codec.frame_rate\">" + str(mov["fps"]) + "000</property>\n")
-				output.write("  <property name=\"meta.media.0.codec.pix_fmt\">yuvj420p</property>\n")
+				output.write("  <property name=\"meta.media.0.codec.pix_fmt\">" + mov["pixfmt"] + "</property>\n")
 				output.write("  <property name=\"meta.media.0.codec.sample_aspect_ratio\">1</property>\n")
 				output.write("  <property name=\"meta.media.0.codec.colorspace\">709</property>\n")
 				output.write("  <property name=\"meta.media.0.codec.color_trc\">1</property>\n")
-				output.write("  <property name=\"meta.media.0.codec.name\">h264</property>\n")
-				output.write("  <property name=\"meta.media.0.codec.long_name\">H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10</property>\n")
-				output.write("  <property name=\"meta.media.0.codec.bit_rate\">28006267</property>\n")
+				output.write("  <property name=\"meta.media.0.codec.name\">" + mov["vcodec"] + "</property>\n")
+				output.write("  <property name=\"meta.media.0.codec.long_name\">" + mov["vcodec"] + "</property>\n")
+				output.write("  <property name=\"meta.media.0.codec.bit_rate\">" + mov["vbrate"] + "</property>\n")
 				output.write("  <property name=\"meta.attr.0.stream.creation_time.markup\">2018-05-09T23:50:49.000000Z</property>\n")
 				output.write("  <property name=\"meta.attr.0.stream.language.markup\">eng</property>\n")
 				output.write("  <property name=\"meta.attr.0.stream.timecode.markup\">09:49:22:10</property>\n")
@@ -409,8 +407,8 @@ class VideoExport:
 				output.write("  <property name=\"meta.media.frame_rate_den\">1</property>\n")
 				output.write("  <property name=\"meta.media.colorspace\">709</property>\n")
 				output.write("  <property name=\"meta.media.color_trc\">1</property>\n")
-				output.write("  <property name=\"meta.media.width\">1920</property>\n")
-				output.write("  <property name=\"meta.media.height\">1080</property>\n")
+				output.write("  <property name=\"meta.media.width\">" + str(mov["width"]) + "</property>\n")
+				output.write("  <property name=\"meta.media.height\">" + str(mov["height"]) + "</property>\n")
 				output.write("  <property name=\"meta.media.top_field_first\">0</property>\n")
 				output.write("  <property name=\"meta.media.progressive\">1</property>\n")
 				output.write(" </producer>\n")
@@ -584,8 +582,8 @@ class VideoExport:
 						output.write("                        <video>\n")
 						output.write("                           <duration>" + str(length) + "</duration>\n")
 						output.write("                           <samplecharacteristics>\n")
-						output.write("                              <width>1920</width>\n")
-						output.write("                              <height>1080</height>\n")
+						output.write("                              <width>" + str(mov["width"]) + "</width>\n")
+						output.write("                              <height>" + str(mov["height"]) + "</height>\n")
 						output.write("                           </samplecharacteristics>\n")
 						output.write("                        </video>\n")
 						output.write("                        <audio>\n")

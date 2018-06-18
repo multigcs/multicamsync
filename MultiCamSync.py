@@ -388,7 +388,7 @@ class MultiCamSync(Gtk.Application):
 				elif begin1 > mov1["frm_length"]:
 					self.video_l.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 				elif ok1:
-					frame_l = cv2.resize(frame1, (480,270))
+					frame_l = cv2.resize(frame1, (self.video_l.get_allocation().width, self.video_l.get_allocation().height))
 					iml = cv2.cvtColor(frame_l, cv2.COLOR_BGR2RGB)
 					pbl = GdkPixbuf.Pixbuf.new_from_data(iml.tostring(),
 					GdkPixbuf.Colorspace.RGB, False, 8, iml.shape[1], iml.shape[0], iml.shape[2] * iml.shape[1])
@@ -411,7 +411,7 @@ class MultiCamSync(Gtk.Application):
 				elif begin2 > mov2["frm_length"]:
 					self.video_r.set_from_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "empty.png"))
 				elif ok2:
-					frame_r = cv2.resize(frame2, (480,270))
+					frame_r = cv2.resize(frame2, (self.video_r.get_allocation().width, self.video_r.get_allocation().height))
 					imr = cv2.cvtColor(frame_r, cv2.COLOR_BGR2RGB)
 					pbr = GdkPixbuf.Pixbuf.new_from_data(imr.tostring(),
 					GdkPixbuf.Colorspace.RGB, False, 8, imr.shape[1], imr.shape[0], imr.shape[2] * imr.shape[1])
