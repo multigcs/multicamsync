@@ -20,6 +20,7 @@ import cairo
 from io import StringIO
 from VideoImport import *
 from VideoExport import *
+from AudioSync import *
 
 
 
@@ -29,6 +30,7 @@ class MultiCamSync(Gtk.Application):
 		self.video_init_cv()
 		self.vi = VideoImport()
 		self.ve = VideoExport(self.vi)
+		self.async = AudioSync()
 		self.cw = 1600
 		self.ch = 200
 		self.stat = 0
@@ -56,6 +58,9 @@ class MultiCamSync(Gtk.Application):
 		button_startstop = Gtk.Button.new_with_label("Start/Stop")
 		button_startstop.connect("clicked", self.start_stop)
 		mainbox.pack_start(button_startstop, False, False, 0)
+		button_autosync = Gtk.Button.new_with_label("Autosync via Audio")
+		button_autosync.connect("clicked", self.autosync)
+		mainbox.pack_start(button_autosync, False, False, 0)
 		self.window.show_all()
 		self.video_loop()
 		if len(sys.argv) > 1:
@@ -90,6 +95,29 @@ class MultiCamSync(Gtk.Application):
 					print("argument is not a known fileformat: " + sys.argv[2])
 					sys.exit(0)
 
+	def autosync(self, button):
+		print("autosync via audio: " + self.project["path1"] + " <-> " + self.project["path2"])
+		mov1 = self.get_mov_by_path(self.project["path1"])
+		if mov1 == {}:
+			return
+		mov2 = self.get_mov_by_path(self.project["path2"])
+		if mov2 == {}:
+			return
+		begin1 = mov1["frm_begin"] + self.project["tracks"][mov1["trackid"]]["frm_trim"] + mov1["frm_trim"]
+		begin2 = mov2["frm_begin"] + self.project["tracks"][mov2["trackid"]]["frm_trim"] + mov2["frm_trim"]
+		print("begin: " + str(begin1) + " <-> " + str(begin2) + " (" + str((begin2 - begin1) / self.project["fps"]) + " s)")
+		diff = self.async.align(self.project["path1"], self.project["path2"])
+		frm_diff = int(diff * self.project["fps"])
+		print("Total diff: " + str(diff) + "s / " + str(frm_diff) + "frames")
+		print("frm_trim", mov2["frm_trim"])
+		print("frm_diff", frm_diff)
+		if frm_diff != 0:
+			new_begin2 = begin1 + frm_diff
+			mov2["frm_trim"] += int(new_begin2 - begin2)
+			self.set_video2_path(self.project["path2"])
+			self.timeline.queue_draw()
+			print(frm_diff)
+			print("frm_trim", mov2["frm_trim"])
 
 	def start_stop(self, button):
 		self.stat = 1 - self.stat
