@@ -575,10 +575,20 @@ class MultiCamSync(Gtk.Application):
 								w = (end - begin) * scale_x
 							pixbuf = Pixbuf.new_from_file(os.path.splitext(mov["path"])[0] + ".THM")
 							self.thumbs[mov["path"]] = pixbuf.scale_simple(w, step_y - 2, InterpType.BILINEAR)
+							if self.thumbs[mov["path"]] == None:
+								self.thumbs[mov["path"]] = ""
+								print("ERROR loading Thumb-File: " + str(mov["path"]))
 						else:
 							self.thumbs[mov["path"]] = ""
 					## draw thumbnail
 					if self.thumbs[mov["path"]] != "":
+#						print(mov["path"])
+#						print(self.thumbs[mov["path"]])
+#						print(begin)
+#						print(scale_x)
+#						print(offset_x)
+#						print(y)
+#						print("---")
 						Gdk.cairo_set_source_pixbuf(cairo_ctx, self.thumbs[mov["path"]], (begin * scale_x) + offset_x, y + 1)
 						cairo_ctx.paint()
 					## draw media label

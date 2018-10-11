@@ -115,13 +115,19 @@ class VideoImport:
 			file.write(str(length) + ";" + str(mov_fps))
 			file.close() 
 		if not os.path.isfile(filename + ".metadata"):
-			print(os.popen("exiftool " + filename + " > " + filename + ".metadata 2>&1").read().strip())
+			popret = os.popen("exiftool '" + filename + "' > '" + filename + ".metadata' 2>&1").read().strip()
+			#print(popret)
 		if not os.path.isfile(os.path.splitext(filename)[0] + ".THM"):
-			print(os.path.splitext(filename)[0] + ".THM")
-			print(os.popen("ffmpeg -i " + filename + " -vf  \"thumbnail,scale=640:360\" -frames:v 1 " + filename + ".jpg > " + filename + ".ffinfo 2>&1").read().strip())
-			os.rename(filename + ".jpg", os.path.splitext(filename)[0] + ".THM")
+			try:
+				#print(os.path.splitext(filename)[0] + ".THM")
+				popret = os.popen("ffmpeg -i '" + filename + "' -vf  \"thumbnail,scale=640:360\" -frames:v 1 '" + filename + ".jpg' > '" + filename + ".ffinfo' 2>&1").read().strip()
+				#print(popret)
+				os.rename(filename + ".jpg", os.path.splitext(filename)[0] + ".THM")
+			except:
+				print("ERROR generating thumbnail of " + filename)
+
 		if not os.path.isfile(filename + ".ffinfo"):
-			print(os.popen("ffmpeg -i " + filename + " > " + filename + ".ffinfo 2>&1").read().strip())
+			print(os.popen("ffmpeg -i '" + filename + "' > '" + filename + ".ffinfo' 2>&1").read().strip())
 		## read metadata
 		file = open(filename + ".info", "r") 
 		length = 0
@@ -129,115 +135,132 @@ class VideoImport:
 		for line in file.read().split("\n"):
 			length = int(line.split(";")[0])
 			mov_fps = float(line.split(";")[1])
-		file = open(filename + ".ffinfo", "r") 
-		input_flag = 0
-		vcodec = ""
-		vsize = ""
-		vbrate = ""
-		vfrate = ""
-		acodec = ""
-		ams = ""
-		afmt = ""
-		abrate = ""
-		parts = ""
-		pixfmt = ""
-		ahz = 48000
-		width = 1920
-		height = 1080
-		for line in file.read().split("\n"):
-			if line.startswith("Input #0,"):
-				input_flag = 1
-			elif line.startswith("Input"):
-				input_flag = 0
-				break
-			elif line.startswith("Output"):
-				input_flag = 0
-				break
-			elif input_flag == 1:
+
+		try:
+			input_flag = 0
+			vcodec = ""
+			vsize = ""
+			vbrate = ""
+			vfrate = ""
+			acodec = ""
+			ams = ""
+			afmt = ""
+			abrate = ""
+			parts = ""
+			pixfmt = ""
+			ahz = 48000
+			width = 1920
+			height = 1080
+			file = open(filename + ".ffinfo", "r") 
+			for line in file.read().split("\n"):
+				if line.startswith("Input #0,"):
+					input_flag = 1
+				elif line.startswith("Input"):
+					input_flag = 0
+					break
+				elif line.startswith("Output"):
+					input_flag = 0
+					break
+				elif input_flag == 1:
+					if ":" in line:
+						var = line.split(":", 1)[0].strip()
+						val = line.split(":", 1)[1].strip()
+					else:
+						continue
+					if "Stream #" in line and ": Video: " in line and "b/s" in line:
+						line = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", line)
+						parts = line.split(",")
+						vcodec = parts[0].split(":")[3].strip().split(" ")[0]
+						vsize = parts[2].strip().split(" ")[0]
+						width = vsize.split("x")[0]
+						height = vsize.split("x")[1]
+						vbrate = parts[3].strip().split(" ")[0] * 1000
+						vfrate = parts[4].strip().split(" ")[0]
+						pixfmt = parts[1].strip().split("(")[0]
+					elif "Stream #" in line and ": Audio: " in line and "b/s" in line:
+						line = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", line)
+						parts = line.split(",")
+						acodec = parts[0].split(":")[3].strip().split(" ")[0]
+						ahz = parts[1].strip().split(" ")[0]
+						ams = parts[2].strip()
+						afmt = parts[3].strip()
+						abrate = parts[4].strip().split(" ")[0] * 1000
+		except:
+			print("ERROR reading: " + filename + ".ffinfo")
+			return 0
+
+		try:
+			camname = cam
+			lens = "???"
+			size = 9999999
+			mimetype = ""
+			filetype = ""
+			cstamp = 0
+			fstamp = 0
+			file = open(filename + ".metadata", "r") 
+			fstamp = os.stat(filename).st_mtime
+			for line in file.read().split("\n"):
 				if ":" in line:
 					var = line.split(":", 1)[0].strip()
 					val = line.split(":", 1)[1].strip()
 				else:
 					continue
-				if "Stream #" in line and ": Video: " in line and "b/s" in line:
-					line = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", line)
-					parts = line.split(",")
-					vcodec = parts[0].split(":")[3].strip().split(" ")[0]
-					vsize = parts[2].strip().split(" ")[0]
-					width = vsize.split("x")[0]
-					height = vsize.split("x")[1]
-					vbrate = parts[3].strip().split(" ")[0] * 1000
-					vfrate = parts[4].strip().split(" ")[0]
-					pixfmt = parts[1].strip().split("(")[0]
-				elif "Stream #" in line and ": Audio: " in line and "b/s" in line:
-					line = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", line)
-					parts = line.split(",")
-					acodec = parts[0].split(":")[3].strip().split(" ")[0]
-					ahz = parts[1].strip().split(" ")[0]
-					ams = parts[2].strip()
-					afmt = parts[3].strip()
-					abrate = parts[4].strip().split(" ")[0] * 1000
+				if val == "":
+					continue
+				elif var == "Image Width":
+					width = int(line.split(":", 1)[1].strip())
+				elif var == "Image Height":
+					height = int(line.split(":", 1)[1].strip())
+				elif var == "MIME Type":
+					mimetype = line.split(":", 1)[1].strip()
+				elif var == "File Type":
+					filetype = line.split(":", 1)[1].strip()
+				elif var == "File Size":
+					size = line.split(":", 1)[1].strip()
+				elif var == "Audio Sample Rate":
+					ahz = int(line.split(":", 1)[1].strip())
+				elif var == "Media Create Date":
+					dt = line.split(":", 1)[1].strip()
+					try:
+						if "." in dt:
+							cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
+						else:
+							cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
+					except:
+						print("BAD TIMEFORMAT: " + str(dt) + " (" + filename + ".metadata)")
+				elif var == "Create Date":
+					dt = line.split(":", 1)[1].strip()
+					try:
+						if "." in dt:
+							cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
+						else:
+							cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
+					except:
+						print("BAD TIMEFORMAT: " + str(dt) + " (" + filename + ".metadata)")
+				elif var == "Date/Time Original":
+					dt = line.split(":", 1)[1].split("+", 1)[0].strip()
+					if "." in dt:
+						cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
+					else:
+						cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
+				elif var == "Canon Model ID":
+					camname = line.split(":", 1)[1].strip()
+				elif var == "Canon Model Name":
+					camname = line.split(":", 1)[1].strip()
+				elif var == "Camera Model Name":
+					camname = line.split(":", 1)[1].strip()
+				elif var == "Model":
+					camname = line.split(":", 1)[1].strip()
+				elif var == "Make":
+					camname = line.split(":", 1)[1].strip()
+				elif var == "Lens Type":
+					lens = line.split(":", 1)[1].strip()
+				elif var == "Lens Model":
+					lens = line.split(":", 1)[1].strip()
+		except:
+			print("ERROR reading: " + filename + ".metadata")
+			return 0
 
-		file = open(filename + ".metadata", "r") 
-		camname = cam
-		lens = "???"
-		size = 9999999
-		mimetype = ""
-		filetype = ""
-		fstamp = os.stat(filename).st_mtime
-		cstamp = 0
-		for line in file.read().split("\n"):
-			if ":" in line:
-				var = line.split(":", 1)[0].strip()
-				val = line.split(":", 1)[1].strip()
-			else:
-				continue
-			if val == "":
-				continue
-			elif var == "Image Width":
-				width = int(line.split(":", 1)[1].strip())
-			elif var == "Image Height":
-				height = int(line.split(":", 1)[1].strip())
-			elif var == "MIME Type":
-				mimetype = line.split(":", 1)[1].strip()
-			elif var == "File Type":
-				filetype = line.split(":", 1)[1].strip()
-			elif var == "File Size":
-				size = line.split(":", 1)[1].strip()
-			elif var == "Audio Sample Rate":
-				ahz = int(line.split(":", 1)[1].strip())
-			elif var == "Media Create Date":
-				dt = line.split(":", 1)[1].strip()
-				if "." in dt:
-					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
-				else:
-					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
-			elif var == "Create Date":
-				dt = line.split(":", 1)[1].strip()
-				if "." in dt:
-					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
-				else:
-					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
-			elif var == "Date/Time Original":
-				dt = line.split(":", 1)[1].split("+", 1)[0].strip()
-				if "." in dt:
-					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S.%f").timetuple()))
-				else:
-					cstamp = float(time.mktime(datetime.datetime.strptime(dt, "%Y:%m:%d %H:%M:%S").timetuple()))
-			elif var == "Canon Model ID":
-				camname = line.split(":", 1)[1].strip()
-			elif var == "Canon Model Name":
-				camname = line.split(":", 1)[1].strip()
-			elif var == "Camera Model Name":
-				camname = line.split(":", 1)[1].strip()
-			elif var == "Model":
-				camname = line.split(":", 1)[1].strip()
-			elif var == "Make":
-				camname = line.split(":", 1)[1].strip()
-			elif var == "Lens Type":
-				lens = line.split(":", 1)[1].strip()
-			elif var == "Lens Model":
-				lens = line.split(":", 1)[1].strip()
 		## fix timestamps
 		if camname in self.cam_calc:
 			if self.cam_calc[camname] == "CSTAMP":
