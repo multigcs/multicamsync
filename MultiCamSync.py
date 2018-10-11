@@ -151,7 +151,7 @@ class MultiCamSync(Gtk.Application):
 
 	def file_save_project(self, action, parameter):
 		if self.filename == "":
-			file_save_project_as(action, parameter)
+			self.file_save_project_as(action, parameter)
 		else:
 			print("MultiCamSync project save to " + self.filename)
 			self.project["pos"] = self.slider_pos.get_value()
@@ -179,7 +179,10 @@ class MultiCamSync(Gtk.Application):
 			self.project["scale"] = self.slider_scale.get_value()
 			self.project["offset"] = self.slider_offset.get_value()
 			jsondata = json.dumps(self.project, indent=4, separators=(',', ': '))
-			file = open(dialog.get_filename(), "w") 
+			filename = dialog.get_filename()
+			if not filename.endswith(".multicamsync"):
+				filename += ".multicamsync"
+			file = open(filename, "w") 
 			file.write(jsondata) 
 			file.close() 
 		elif response == Gtk.ResponseType.CANCEL:
