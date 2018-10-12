@@ -234,8 +234,11 @@ class MultiCamSync(Gtk.Application):
 		dialog.add_filter(filter_any)
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
-			print("Xmeml project export to " + dialog.get_filename())
-			self.ve.xmeml(dialog.get_filename(), self.project)
+			filename = dialog.get_filename()
+			if not filename.endswith(".xmeml"):
+				filename += ".xmeml"
+			print("Xmeml project export to " + filename)
+			self.ve.xmeml(filename, self.project)
 		elif response == Gtk.ResponseType.CANCEL:
 			print("Cancel clicked")
 		dialog.destroy()
@@ -252,8 +255,11 @@ class MultiCamSync(Gtk.Application):
 		dialog.add_filter(filter_any)
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
-			print("openshot project export to " + dialog.get_filename())
-			self.ve.openshot(dialog.get_filename(), self.project)
+			filename = dialog.get_filename()
+			if not filename.endswith(".osp"):
+				filename += ".osp"
+			print("openshot project export to " + filename)
+			self.ve.openshot(filename, self.project)
 		elif response == Gtk.ResponseType.CANCEL:
 			print("Cancel clicked")
 		dialog.destroy()
@@ -270,8 +276,11 @@ class MultiCamSync(Gtk.Application):
 		dialog.add_filter(filter_any)
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
-			print("Kdenlive project export to " + dialog.get_filename())
-			self.ve.kdenlive(dialog.get_filename(), self.project)
+			filename = dialog.get_filename()
+			if not filename.endswith(".kdenlive"):
+				filename += ".kdenlive"
+			print("Kdenlive project export to " + filename)
+			self.ve.kdenlive(filename, self.project)
 		elif response == Gtk.ResponseType.CANCEL:
 			print("Cancel clicked")
 		dialog.destroy()
@@ -767,7 +776,7 @@ class MultiCamSync(Gtk.Application):
 		## media-diff slider
 		label = Gtk.Label("Media-Diff: ")
 		diffbox.pack_start(label, False, False, 0)
-		self.slider_diff = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, -300, 300, 1.0)
+		self.slider_diff = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, -900, 900, 1.0)
 		diffbox.pack_start(self.slider_diff, True, True, 0)
 		self.slider_diff.connect("value-changed", self.on_update_diff)
 		## track-diff spinner
